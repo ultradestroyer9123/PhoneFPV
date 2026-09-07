@@ -18,5 +18,3 @@ Legacy uses hobbyking reciever (HK-GT2E)
  - if you are curious how that will work, phone fetches sound from webpage, plays thru audiojack, audio goes thru audio biasing circuit then to analog pin on arduino.
  - audio biasing circuit just shifts audio sinewave signal above the 0 so its no longer negative, then maps it to 0-5V.
 
- | |
-\___/
