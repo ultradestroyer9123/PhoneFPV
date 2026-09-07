@@ -1,0 +1,457 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>PhoneFPV - Phone</title>
+
+    <style>
+        body {
+            background: #111;
+            color: white;
+            font-family: Arial, sans-serif;
+            text-align: center;
+            margin: 0;
+            padding: 20px;
+        }
+
+        video {
+            width: 100%;
+            max-width: 900px;
+            border-radius: 10px;
+            background: black;
+        }
+
+        #status {
+            margin: 15px;
+            font-size: 18px;
+        }
+    </style>
+</head>
+
+<body>
+
+<h1>PhoneFPV</h1>
+
+<div id="status">Requesting camera...</div>
+
+<video id="preview" autoplay playsinline muted></video>
+
+<script>
+
+const statusText = document.getElementById("status");
+const preview = document.getElementById("preview");
+
+let pc;
+let videoTrack;
+
+
+// ------------------------------------------------------------
+// Wait until ICE gathering is complete
+// ------------------------------------------------------------
+
+function waitForIceGatheringComplete(pc) {
+
+    return new Promise(resolve => {
+
+        if (pc.iceGatheringState === "complete") {
+            resolve();
+            return;
+        }
+
+        function checkState() {
+
+            if (pc.iceGatheringState === "complete") {
+
+                pc.removeEventListener(
+                    "icegatheringstatechange",
+                    checkState
+                );
+
+                resolve();
+            }
+        }
+
+        pc.addEventListener(
+            "icegatheringstatechange",
+            checkState
+        );
+    });
+}
+
+
+// ------------------------------------------------------------
+// Poll for computer's answer
+// ------------------------------------------------------------
+
+async function waitForAnswer() {
+
+    while (true) {
+
+        try {
+
+            const response =
+                await fetch("/signal/answer");
+
+            const data =
+                await response.json();
+
+            if (data.answer) {
+
+                await pc.setRemoteDescription(
+                    new RTCSessionDescription(data.answer)
+                );
+
+                statusText.textContent =
+                    "Connected";
+
+                return;
+            }
+
+        } catch (error) {
+
+            console.error(error);
+        }
+
+        await new Promise(resolve =>
+            setTimeout(resolve, 500)
+        );
+    }
+}
+
+
+// ------------------------------------------------------------
+// Get current settings
+// ------------------------------------------------------------
+
+async function updateSettings() {
+
+    try {
+
+        const response =
+            await fetch("/settings");
+
+        const data =
+            await response.json();
+
+        if (!videoTrack || !pc) {
+            return;
+        }
+
+        const sender =
+            pc.getSenders().find(
+                sender => sender.track === videoTrack
+            );
+
+        if (!sender) {
+            return;
+        }
+
+        const parameters =
+            sender.getParameters();
+
+        if (
+            !parameters.encodings ||
+            parameters.encodings.length === 0
+        ) {
+
+            parameters.encodings = [{}];
+        }
+
+        const encoding =
+            parameters.encodings[0];
+
+
+        // FPS slider directly controls maximum FPS.
+
+        encoding.maxFramerate =
+            data.fps;
+
+
+        // Convert quality percentage into
+        // an approximate bitrate.
+        //
+        // 10%  ≈ 250 kbps
+        // 70%  ≈ 4.6 Mbps
+        // 100% ≈ 8 Mbps
+        //
+        // This is NOT JPEG quality anymore.
+
+        const minBitrate =
+            250_000;
+
+        const maxBitrate =
+            8_000_000;
+
+        const quality =
+            data.quality / 100;
+
+        encoding.maxBitrate =
+            minBitrate +
+            (maxBitrate - minBitrate) * quality;
+
+
+        await sender.setParameters(
+            parameters
+        );
+
+    } catch (error) {
+
+        console.error(
+            "Settings error:",
+            error
+        );
+    }
+}
+
+
+// ------------------------------------------------------------
+// Send phone battery percentage to Flask
+// ------------------------------------------------------------
+
+async function sendBattery() {
+
+    try {
+
+        const battery =
+            await navigator.getBattery();
+
+        const percentage =
+            Math.round(
+                battery.level * 100
+            );
+
+
+        await fetch("/battery", {
+
+            method: "POST",
+
+            headers: {
+                "Content-Type": "application/json"
+            },
+
+            body: JSON.stringify({
+                battery: percentage
+            })
+
+        });
+
+
+        console.log(
+            "Phone battery:",
+            percentage + "%"
+        );
+
+    } catch (error) {
+
+        console.error(
+            "Battery error:",
+            error
+        );
+    }
+}
+
+
+// ------------------------------------------------------------
+// Main WebRTC setup
+// ------------------------------------------------------------
+
+async function start() {
+
+    try {
+
+        statusText.textContent =
+            "Requesting camera permission...";
+
+
+        const stream =
+            await navigator.mediaDevices.getUserMedia({
+
+                video: {
+
+                    facingMode: {
+                        ideal: "environment"
+                    },
+
+                    width: {
+                        ideal: 1280
+                    },
+
+                    height: {
+                        ideal: 720
+                    },
+
+                    frameRate: {
+                        ideal: 30,
+                        max: 60
+                    }
+                },
+
+                audio: false
+            });
+
+
+        preview.srcObject =
+            stream;
+
+        videoTrack =
+            stream.getVideoTracks()[0];
+
+        statusText.textContent =
+            "Camera ready. Waiting for computer...";
+
+
+        // ----------------------------------------------------
+        // Create peer connection
+        // ----------------------------------------------------
+
+        pc =
+            new RTCPeerConnection({
+                iceServers: []
+            });
+
+
+        // Add camera track
+
+        pc.addTrack(
+            videoTrack,
+            stream
+        );
+
+
+        pc.onconnectionstatechange =
+            () => {
+
+                console.log(
+                    "Connection:",
+                    pc.connectionState
+                );
+
+
+                if (
+                    pc.connectionState ===
+                    "connected"
+                ) {
+
+                    statusText.textContent =
+                        "Connected to computer";
+
+                } else if (
+
+                    pc.connectionState ===
+                    "disconnected" ||
+
+                    pc.connectionState ===
+                    "failed"
+
+                ) {
+
+                    statusText.textContent =
+                        "Connection lost";
+                }
+            };
+
+
+        // ----------------------------------------------------
+        // Create offer
+        // ----------------------------------------------------
+
+        const offerDescription =
+            await pc.createOffer();
+
+
+        await pc.setLocalDescription(
+            offerDescription
+        );
+
+
+        // Wait until ICE candidates
+        // have been added
+
+        await waitForIceGatheringComplete(
+            pc
+        );
+
+
+        // ----------------------------------------------------
+        // Send complete SDP offer to Flask
+        // ----------------------------------------------------
+
+        await fetch(
+            "/signal/offer",
+            {
+
+                method: "POST",
+
+                headers: {
+                    "Content-Type":
+                        "application/json"
+                },
+
+                body: JSON.stringify({
+                    offer:
+                        pc.localDescription
+                })
+            }
+        );
+
+
+        // ----------------------------------------------------
+        // Wait for computer
+        // ----------------------------------------------------
+
+        await waitForAnswer();
+
+
+        // Apply settings immediately
+
+        await updateSettings();
+
+    } catch (error) {
+
+        console.error(error);
+
+        statusText.textContent =
+            "Camera/WebRTC error: " +
+            error.message;
+    }
+}
+
+
+// ------------------------------------------------------------
+// Check settings every 500 ms.
+//
+// This is ONLY one tiny request every half-second.
+// It is NOT one request per video frame.
+// ------------------------------------------------------------
+
+setInterval(
+    updateSettings,
+    1500
+);
+
+
+// ------------------------------------------------------------
+// Battery reporting
+//
+// Send immediately when PhoneFPV starts,
+// then once every 60 seconds.
+// ------------------------------------------------------------
+
+sendBattery();
+
+setInterval(
+    sendBattery,
+    60000
+);
+
+
+// ------------------------------------------------------------
+// Start PhoneFPV
+// ------------------------------------------------------------
+
+start();
+
+</script>
+
+</body>
+</html>
