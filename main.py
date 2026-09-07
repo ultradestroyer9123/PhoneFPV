@@ -1,10 +1,19 @@
-from flask import Flask, render_template, request, jsonify, render_template_string
+from flask import Flask, redirect, render_template, request, jsonify, render_template_string
 import threading
 import os
 
 os.chdir(os.path.dirname(os.path.abspath(__file__)))
 
 app = Flask(__name__)
+
+@app.before_request
+def before_request():
+    # Check if the connection is secure or behind a secure proxy
+    if not request.is_secure:
+        # Check standard proxy header if deployed on a cloud/proxy platform
+        if request.headers.get('X-Forwarded-Proto', 'http') == 'http':
+            url = request.url.replace('http://', 'https://', 1)
+            return redirect(url, code=301)
 
 PORT = 1234
 
