@@ -75,6 +75,257 @@ def battery():
         "battery": phone_battery
     }
 
+
+# ============================================================
+# CONTROLLER
+# ============================================================
+
+controller = {
+
+    # Whether keyboard control is enabled
+    "enabled": False,
+
+    # Current movement direction
+    "direction": "stop",
+
+    # Analog throttle: 0-100
+    "throttle": 0,
+
+    # Steering Dual Rate: 0-100
+    "steeringDualRate": 0,
+
+    # Individual movement states
+    "forward": 0,
+    "backward": 0,
+    "left": 0,
+    "right": 0
+
+}
+
+controller_lock = threading.Lock()
+
+
+# ------------------------------------------------------------
+# CONTROLLER ROUTE
+# ------------------------------------------------------------
+
+@app.route("/controller", methods=["GET", "POST"])
+def controller_route():
+
+    # ========================================================
+    # RECEIVE CONTROLLER DATA
+    # ========================================================
+
+    if request.method == "POST":
+
+        data = request.get_json(
+            silent=True
+        )
+
+
+        if not isinstance(data, dict):
+
+            return jsonify({
+                "success": False,
+                "error": "Invalid controller data"
+            }), 400
+
+
+        with controller_lock:
+
+
+            # ------------------------------------------------
+            # Enabled
+            # ------------------------------------------------
+
+            if "enabled" in data:
+
+                controller["enabled"] = bool(
+                    data["enabled"]
+                )
+
+
+            # ------------------------------------------------
+            # Direction
+            # ------------------------------------------------
+
+            valid_directions = {
+
+                "stop",
+
+                "forward",
+                "backward",
+
+                "left",
+                "right",
+
+                "forward-left",
+                "forward-right",
+
+                "backward-left",
+                "backward-right"
+
+            }
+
+
+            if "direction" in data:
+
+                direction = str(
+                    data["direction"]
+                )
+
+
+                if direction in valid_directions:
+
+                    controller["direction"] = \
+                        direction
+
+
+            # ------------------------------------------------
+            # THROTTLE
+            # ------------------------------------------------
+
+            if "throttle" in data:
+
+                try:
+
+                    controller["throttle"] = max(
+                        0,
+                        min(
+                            100,
+                            int(data["throttle"])
+                        )
+                    )
+
+                except (
+                    TypeError,
+                    ValueError
+                ):
+
+                    pass
+
+
+            # ------------------------------------------------
+            # STEERING DUAL RATE
+            # ------------------------------------------------
+
+            if "steeringDualRate" in data:
+
+                try:
+
+                    controller[
+                        "steeringDualRate"
+                    ] = max(
+                        0,
+                        min(
+                            100,
+                            int(
+                                data[
+                                    "steeringDualRate"
+                                ]
+                            )
+                        )
+                    )
+
+                except (
+                    TypeError,
+                    ValueError
+                ):
+
+                    pass
+
+
+            # ------------------------------------------------
+            # MOVEMENT STATES
+            # ------------------------------------------------
+
+            movement_keys = [
+
+                "forward",
+                "backward",
+                "left",
+                "right"
+
+            ]
+
+
+            for key in movement_keys:
+
+                if key in data:
+
+                    controller[key] = (
+                        1
+                        if bool(data[key])
+                        else 0
+                    )
+
+
+            # ------------------------------------------------
+            # If disabled, force movement to STOP
+            # ------------------------------------------------
+
+            if not controller["enabled"]:
+
+                controller["direction"] = \
+                    "stop"
+
+                controller["forward"] = 0
+                controller["backward"] = 0
+                controller["left"] = 0
+                controller["right"] = 0
+
+
+            # ------------------------------------------------
+            # Make a copy
+            # ------------------------------------------------
+
+            current_controller = dict(
+                controller
+            )
+
+
+        # ----------------------------------------------------
+        # PRINT CONTROLLER DATA
+        # ----------------------------------------------------
+        #
+        # This lets you see exactly what the computer
+        # is sending in your terminal.
+        #
+        # You can remove this print later if desired.
+        #
+
+        print(
+            "Controller:",
+            current_controller
+        )
+
+
+        # ----------------------------------------------------
+        # RETURN SUCCESS
+        # ----------------------------------------------------
+
+        return jsonify({
+
+            "success": True,
+
+            "controller":
+                current_controller
+
+        })
+
+
+    # ========================================================
+    # GET CURRENT CONTROLLER STATE
+    # ========================================================
+
+    with controller_lock:
+
+        return jsonify(
+            dict(controller)
+        )
+
+
+
 @app.route("/phone")
 def phone():
     return render_template("phone.html")

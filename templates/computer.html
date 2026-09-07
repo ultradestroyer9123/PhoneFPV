@@ -56,13 +56,213 @@
             position: absolute;
         }
 
-        .controls {
-            max-width: 700px;
+        /* ----------------------------------------------------
+           Main controls layout
+           ---------------------------------------------------- */
+
+        .controls-wrapper {
+            max-width: 1000px;
             margin: 25px auto;
+
+            display: flex;
+            align-items: flex-start;
+            gap: 20px;
+        }
+
+        .controls {
+            flex: 1;
+
             background: #222;
             padding: 20px;
             border-radius: 10px;
+
+            box-sizing: border-box;
         }
+
+        /* ----------------------------------------------------
+           Keyboard controller panel
+           ---------------------------------------------------- */
+
+        .controller-panel {
+            width: 330px;
+            flex-shrink: 0;
+
+            background: #222;
+            padding: 20px;
+            border-radius: 10px;
+
+            box-sizing: border-box;
+        }
+
+        .controller-title {
+            text-align: center;
+            font-size: 20px;
+            font-weight: bold;
+
+            margin-bottom: 15px;
+        }
+
+        .keyboard-enable {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+
+            margin-bottom: 20px;
+
+            padding: 10px;
+            background: #181818;
+            border-radius: 6px;
+
+            cursor: pointer;
+        }
+
+        .keyboard-enable input {
+            width: 18px;
+            height: 18px;
+
+            cursor: pointer;
+        }
+
+        .keyboard-status {
+            text-align: center;
+
+            margin-bottom: 15px;
+
+            font-size: 13px;
+            color: #aaa;
+        }
+
+        .direction-pad {
+            display: grid;
+
+            grid-template-columns:
+                repeat(3, 1fr);
+
+            grid-template-rows:
+                repeat(3, 65px);
+
+            gap: 6px;
+
+            width: 100%;
+        }
+
+        .direction-button {
+            width: 100%;
+            height: 100%;
+
+            padding: 0;
+
+            border: 1px solid #555;
+            border-radius: 8px;
+
+            background: #333;
+            color: white;
+
+            font-size: 30px;
+            line-height: 1;
+
+            cursor: pointer;
+
+            user-select: none;
+            -webkit-user-select: none;
+
+            transition:
+                background 0.05s,
+                transform 0.05s;
+        }
+
+        .direction-button:hover {
+            background: #444;
+        }
+
+        .direction-button.active {
+            background: #666;
+
+            transform: scale(0.96);
+        }
+
+        .direction-button:disabled {
+            opacity: 0.35;
+            cursor: not-allowed;
+        }
+
+        .direction-empty {
+            visibility: hidden;
+        }
+
+        /* ----------------------------------------------------
+           Controller values
+           ---------------------------------------------------- */
+
+        .controller-values {
+            margin-top: 20px;
+        }
+
+        .controller-value {
+            margin-bottom: 14px;
+        }
+
+        .controller-value-label {
+            display: flex;
+            justify-content: space-between;
+
+            margin-bottom: 6px;
+
+            font-size: 14px;
+        }
+
+        .controller-value-bar {
+            width: 100%;
+            height: 10px;
+
+            background: #111;
+            border-radius: 5px;
+
+            overflow: hidden;
+        }
+
+        .controller-value-fill {
+            height: 100%;
+            width: 0%;
+
+            background: #777;
+
+            transition: width 0.05s linear;
+        }
+
+        .controller-direction {
+            margin-top: 12px;
+
+            padding: 10px;
+
+            background: #181818;
+            border-radius: 6px;
+
+            text-align: center;
+
+            font-size: 14px;
+        }
+
+        .keyboard-help {
+            margin-top: 18px;
+
+            padding-top: 15px;
+
+            border-top: 1px solid #444;
+
+            color: #aaa;
+
+            font-size: 12px;
+            line-height: 1.6;
+        }
+
+        .keyboard-help strong {
+            color: white;
+        }
+
+        /* ----------------------------------------------------
+           Existing controls
+           ---------------------------------------------------- */
 
         .control {
             margin-bottom: 25px;
@@ -99,6 +299,26 @@
             font-size: 18px;
         }
 
+        /* ----------------------------------------------------
+           Smaller screens
+           ---------------------------------------------------- */
+
+        @media (max-width: 800px) {
+
+            .controls-wrapper {
+                flex-direction: column;
+            }
+
+            .controller-panel {
+                width: 100%;
+            }
+
+            .controls {
+                width: 100%;
+            }
+
+        }
+
     </style>
 </head>
 
@@ -123,116 +343,410 @@
 </div>
 
 
-<div class="controls">
+<!-- ========================================================
+     CONTROLS WRAPPER
+     ======================================================== -->
 
-    <!-- QUALITY -->
+<div class="controls-wrapper">
 
-    <div class="control">
 
-        <div class="label">
-            <span>Quality</span>
-            <span id="qualityValue">70%</span>
+    <!-- ====================================================
+         KEYBOARD CONTROLLER
+         ==================================================== -->
+
+    <div class="controller-panel">
+
+        <div class="controller-title">
+            Control Panel
         </div>
 
-        <input
-            id="quality"
-            type="range"
-            min="10"
-            max="100"
-            value="70"
-        >
+
+        <label class="keyboard-enable">
+
+            <input
+                id="keyboardController"
+                type="checkbox"
+            >
+
+            <span>
+                Enable Keyboard Controller
+            </span>
+
+        </label>
+
+
+        <div
+            id="keyboardStatus"
+            class="keyboard-status">
+
+            Controller disabled
+
+        </div>
+
+
+        <!-- =================================================
+             Direction pad
+             ================================================= -->
+
+        <div class="direction-pad">
+
+
+            <!-- Forward + Left -->
+
+            <button
+                id="directionForwardLeft"
+                class="direction-button"
+                type="button"
+                data-direction="forward-left"
+                disabled>
+                ↖
+            </button>
+
+
+            <!-- Forward -->
+
+            <button
+                id="directionForward"
+                class="direction-button"
+                type="button"
+                data-direction="forward"
+                disabled>
+                ↑
+            </button>
+
+
+            <!-- Forward + Right -->
+
+            <button
+                id="directionForwardRight"
+                class="direction-button"
+                type="button"
+                data-direction="forward-right"
+                disabled>
+                ↗
+            </button>
+
+
+            <!-- Left -->
+
+            <button
+                id="directionLeft"
+                class="direction-button"
+                type="button"
+                data-direction="left"
+                disabled>
+                ←
+            </button>
+
+
+            <!-- Center -->
+
+            <button
+                id="directionStop"
+                class="direction-button"
+                type="button"
+                data-direction="stop"
+                disabled>
+                ●
+            </button>
+
+
+            <!-- Right -->
+
+            <button
+                id="directionRight"
+                class="direction-button"
+                type="button"
+                data-direction="right"
+                disabled>
+                →
+            </button>
+
+
+            <!-- Backward + Left -->
+
+            <button
+                id="directionBackwardLeft"
+                class="direction-button"
+                type="button"
+                data-direction="backward-left"
+                disabled>
+                ↙
+            </button>
+
+
+            <!-- Backward -->
+
+            <button
+                id="directionBackward"
+                class="direction-button"
+                type="button"
+                data-direction="backward"
+                disabled>
+                ↓
+            </button>
+
+
+            <!-- Backward + Right -->
+
+            <button
+                id="directionBackwardRight"
+                class="direction-button"
+                type="button"
+                data-direction="backward-right"
+                disabled>
+                ↘
+            </button>
+
+        </div>
+
+
+        <!-- =================================================
+             Controller values
+             ================================================= -->
+
+        <div class="controller-values">
+
+
+            <!-- Throttle -->
+
+            <div class="controller-value">
+
+                <div class="controller-value-label">
+
+                    <span>
+                        Throttle
+                    </span>
+
+                    <span id="throttleValue">
+                        0%
+                    </span>
+
+                </div>
+
+                <div class="controller-value-bar">
+
+                    <div
+                        id="throttleFill"
+                        class="controller-value-fill">
+                    </div>
+
+                </div>
+
+            </div>
+
+
+            <!-- Steering Dual Rate -->
+
+            <div class="controller-value">
+
+                <div class="controller-value-label">
+
+                    <span>
+                        ST.D/R
+                    </span>
+
+                    <span id="steeringValue">
+                        0%
+                    </span>
+
+                </div>
+
+                <div class="controller-value-bar">
+
+                    <div
+                        id="steeringFill"
+                        class="controller-value-fill">
+                    </div>
+
+                </div>
+
+            </div>
+
+
+            <!-- Current direction -->
+
+            <div
+                id="controllerDirection"
+                class="controller-direction">
+
+                STOP
+
+            </div>
+
+        </div>
+
+
+        <!-- =================================================
+             Keyboard help
+             ================================================= -->
+
+        <div class="keyboard-help">
+
+            <strong>Movement</strong><br>
+
+            W = Forward<br>
+            A = Left<br>
+            S = Backward<br>
+            D = Right<br><br>
+
+            <strong>Diagonals</strong><br>
+
+            Q = Forward + Left<br>
+            E = Forward + Right<br>
+            Z = Backward + Left<br>
+            C = Backward + Right<br><br>
+
+            <strong>Analog control</strong><br>
+
+            ↑ / ↓ = Throttle<br>
+            ← / → = ST.D/R
+
+        </div>
 
     </div>
 
 
-    <!-- FPS -->
+    <!-- ====================================================
+         EXISTING CONTROLS
+         ==================================================== -->
 
-    <div class="control">
+    <div class="controls">
 
-        <div class="label">
-            <span>FPS</span>
-            <span id="fpsValue">30 FPS</span>
+        <!-- QUALITY -->
+
+        <div class="control">
+
+            <div class="label">
+                <span>Quality</span>
+                <span id="qualityValue">70%</span>
+            </div>
+
+            <input
+                id="quality"
+                type="range"
+                min="10"
+                max="100"
+                value="70"
+            >
+
         </div>
 
-        <input
-            id="fps"
-            type="range"
-            min="1"
-            max="60"
-            value="30"
-        >
 
-    </div>
+        <!-- FPS -->
 
+        <div class="control">
 
-    <!-- ROTATION -->
+            <div class="label">
+                <span>FPS</span>
+                <span id="fpsValue">30 FPS</span>
+            </div>
 
-    <div class="control">
+            <input
+                id="fps"
+                type="range"
+                min="1"
+                max="60"
+                value="30"
+            >
 
-        <div class="label">
-            <span>Rotation</span>
-            <span id="rotationValue">0°</span>
         </div>
 
-        <select id="rotation">
-            <option value="0">0°</option>
-            <option value="90">90°</option>
-            <option value="180">180°</option>
-            <option value="270">270°</option>
-        </select>
 
-    </div>
+        <!-- ROTATION -->
 
+        <div class="control">
 
-    <!-- SCALE -->
+            <div class="label">
+                <span>Rotation</span>
+                <span id="rotationValue">0°</span>
+            </div>
 
-    <div class="control">
+            <select id="rotation">
+                <option value="0">0°</option>
+                <option value="90">90°</option>
+                <option value="180">180°</option>
+                <option value="270">270°</option>
+            </select>
 
-        <div class="label">
-            <span>Scale</span>
-            <span id="scaleValue">100%</span>
         </div>
 
-        <input
-            id="scale"
-            type="range"
-            min="25"
-            max="200"
-            value="100"
-        >
+
+        <!-- SCALE -->
+
+        <div class="control">
+
+            <div class="label">
+                <span>Scale</span>
+                <span id="scaleValue">100%</span>
+            </div>
+
+            <input
+                id="scale"
+                type="range"
+                min="25"
+                max="200"
+                value="100"
+            >
+
+        </div>
+
+
+        <button id="reset">
+            Reset Position / Rotation / Scale
+        </button>
 
     </div>
-
-
-    <button id="reset">
-        Reset Position / Rotation / Scale
-    </button>
 
 </div>
 
 
 <script>
+
 async function updateBatteryDisplay() {
+
     try {
-        const response = await fetch("/battery");
-        const data = await response.json();
+
+        const response =
+            await fetch("/battery");
+
+        const data =
+            await response.json();
 
         if (data.battery !== null) {
+
             document.getElementById("battery").textContent =
                 `📱 Battery: ${data.battery}%`;
+
         }
+
     } catch (error) {
-        console.error("Could not get phone battery:", error);
+
+        console.error(
+            "Could not get phone battery:",
+            error
+        );
+
     }
+
 }
 
+
 updateBatteryDisplay();
-setInterval(updateBatteryDisplay, 60000);
+
+setInterval(
+    updateBatteryDisplay,
+    60000
+);
+
+
 const viewer =
     document.getElementById("viewer");
 
+
 const video =
     document.getElementById("video");
+
 
 const statusText =
     document.getElementById("status");
@@ -292,6 +806,7 @@ function updateTransform() {
         `translate(${videoX}px, ${videoY}px)
          rotate(${videoRotation}deg)
          scale(${videoScale})`;
+
 }
 
 
@@ -308,6 +823,7 @@ rotation.addEventListener("input", () => {
         videoRotation + "°";
 
     updateTransform();
+
 });
 
 
@@ -324,6 +840,7 @@ scale.addEventListener("input", () => {
         scale.value + "%";
 
     updateTransform();
+
 });
 
 
@@ -346,10 +863,12 @@ resetButton.addEventListener("click", () => {
     scaleValue.textContent = "100%";
 
     updateTransform();
+
 });
 
 
 // Double click also resets
+
 video.addEventListener("dblclick", () => {
 
     resetButton.click();
@@ -499,9 +1018,13 @@ function waitForIceGatheringComplete(pc) {
     return new Promise(resolve => {
 
         if (pc.iceGatheringState === "complete") {
+
             resolve();
+
             return;
+
         }
+
 
         function checkState() {
 
@@ -513,14 +1036,19 @@ function waitForIceGatheringComplete(pc) {
                 );
 
                 resolve();
+
             }
+
         }
+
 
         pc.addEventListener(
             "icegatheringstatechange",
             checkState
         );
+
     });
+
 }
 
 
@@ -541,7 +1069,9 @@ async function waitForOffer() {
                 await response.json();
 
             if (data.offer) {
+
                 return data.offer;
+
             }
 
         } catch (error) {
@@ -550,10 +1080,13 @@ async function waitForOffer() {
 
         }
 
+
         await new Promise(resolve =>
             setTimeout(resolve, 500)
         );
+
     }
+
 }
 
 
@@ -572,6 +1105,7 @@ async function sendSettings() {
             parseInt(fps.value)
 
     };
+
 
     try {
 
@@ -595,6 +1129,7 @@ async function sendSettings() {
         );
 
     }
+
 }
 
 
@@ -624,6 +1159,1326 @@ fps.addEventListener("change", () => {
     sendSettings();
 
 });
+
+
+// ============================================================
+// KEYBOARD CONTROLLER
+// ============================================================
+
+
+// ------------------------------------------------------------
+// Controller elements
+// ------------------------------------------------------------
+
+const keyboardController =
+    document.getElementById(
+        "keyboardController"
+    );
+
+const keyboardStatus =
+    document.getElementById(
+        "keyboardStatus"
+    );
+
+const throttleValue =
+    document.getElementById(
+        "throttleValue"
+    );
+
+const throttleFill =
+    document.getElementById(
+        "throttleFill"
+    );
+
+const steeringValue =
+    document.getElementById(
+        "steeringValue"
+    );
+
+const steeringFill =
+    document.getElementById(
+        "steeringFill"
+    );
+
+const controllerDirection =
+    document.getElementById(
+        "controllerDirection"
+    );
+
+
+// ------------------------------------------------------------
+// Controller state
+// ------------------------------------------------------------
+
+let throttle = 0;
+
+let steeringDualRate = 0;
+
+
+// Keys currently being held
+
+const pressedKeys =
+    new Set();
+
+
+// Arrow key acceleration
+
+let arrowControlInterval = null;
+
+
+// Last controller data sent
+
+let lastControllerPayload = null;
+
+
+// Prevent excessive POST requests
+
+let controllerSendTimeout = null;
+
+
+// ------------------------------------------------------------
+// Direction button map
+// ------------------------------------------------------------
+
+const directionButtons = {
+
+    "forward-left":
+        document.getElementById(
+            "directionForwardLeft"
+        ),
+
+    "forward":
+        document.getElementById(
+            "directionForward"
+        ),
+
+    "forward-right":
+        document.getElementById(
+            "directionForwardRight"
+        ),
+
+    "left":
+        document.getElementById(
+            "directionLeft"
+        ),
+
+    "right":
+        document.getElementById(
+            "directionRight"
+        ),
+
+    "backward-left":
+        document.getElementById(
+            "directionBackwardLeft"
+        ),
+
+    "backward":
+        document.getElementById(
+            "directionBackward"
+        ),
+
+    "backward-right":
+        document.getElementById(
+            "directionBackwardRight"
+        ),
+
+    "stop":
+        document.getElementById(
+            "directionStop"
+        )
+
+};
+
+
+// ------------------------------------------------------------
+// Update controller display
+// ------------------------------------------------------------
+
+function updateControllerDisplay() {
+
+    throttleValue.textContent =
+        throttle + "%";
+
+    throttleFill.style.width =
+        throttle + "%";
+
+
+    steeringValue.textContent =
+        steeringDualRate + "%";
+
+    steeringFill.style.width =
+        steeringDualRate + "%";
+
+
+    const direction =
+        getCurrentDirection();
+
+
+    controllerDirection.textContent =
+        direction.toUpperCase();
+
+
+    updateDirectionButtons();
+
+}
+
+
+// ------------------------------------------------------------
+// Clamp values
+// ------------------------------------------------------------
+
+function clamp(value, min, max) {
+
+    return Math.min(
+        max,
+        Math.max(min, value)
+    );
+
+}
+
+
+// ------------------------------------------------------------
+// Change throttle
+// ------------------------------------------------------------
+
+function changeThrottle(amount) {
+
+    const oldValue =
+        throttle;
+
+
+    throttle =
+        clamp(
+            throttle + amount,
+            0,
+            100
+        );
+
+
+    if (throttle !== oldValue) {
+
+        updateControllerDisplay();
+
+        sendControllerData();
+
+    }
+
+}
+
+
+// ------------------------------------------------------------
+// Change steering dual rate
+// ------------------------------------------------------------
+
+function changeSteering(amount) {
+
+    const oldValue =
+        steeringDualRate;
+
+
+    steeringDualRate =
+        clamp(
+            steeringDualRate + amount,
+            0,
+            100
+        );
+
+
+    if (
+        steeringDualRate !==
+        oldValue
+    ) {
+
+        updateControllerDisplay();
+
+        sendControllerData();
+
+    }
+
+}
+
+
+// ------------------------------------------------------------
+// Determine movement direction
+// ------------------------------------------------------------
+
+function getCurrentDirection() {
+
+    if (!keyboardController.checked) {
+        return "stop";
+    }
+
+
+    const forward =
+        pressedKeys.has("w") ||
+        pressedKeys.has("q") ||
+        pressedKeys.has("e");
+
+
+    const backward =
+        pressedKeys.has("s") ||
+        pressedKeys.has("z") ||
+        pressedKeys.has("c");
+
+
+    const left =
+        pressedKeys.has("a") ||
+        pressedKeys.has("q") ||
+        pressedKeys.has("z");
+
+
+    const right =
+        pressedKeys.has("d") ||
+        pressedKeys.has("e") ||
+        pressedKeys.has("c");
+
+
+    /*
+     * If both forward and backward
+     * are held, cancel the throttle
+     * direction rather than guessing.
+     */
+
+    if (forward && backward) {
+
+        return "stop";
+
+    }
+
+
+    if (forward && left) {
+        return "forward-left";
+    }
+
+
+    if (forward && right) {
+        return "forward-right";
+    }
+
+
+    if (backward && left) {
+        return "backward-left";
+    }
+
+
+    if (backward && right) {
+        return "backward-right";
+    }
+
+
+    if (forward) {
+        return "forward";
+    }
+
+
+    if (backward) {
+        return "backward";
+    }
+
+
+    if (left) {
+        return "left";
+    }
+
+
+    if (right) {
+        return "right";
+    }
+
+
+    return "stop";
+
+}
+
+
+// ------------------------------------------------------------
+// Highlight visual direction
+// ------------------------------------------------------------
+
+function updateDirectionButtons() {
+
+    Object.values(directionButtons)
+        .forEach(button => {
+
+            button.classList.remove(
+                "active"
+            );
+
+        });
+
+
+    const direction =
+        getCurrentDirection();
+
+
+    if (directionButtons[direction]) {
+
+        directionButtons[direction]
+            .classList.add("active");
+
+    }
+
+}
+
+
+// ------------------------------------------------------------
+// Build controller POST payload
+// ------------------------------------------------------------
+
+function getControllerPayload() {
+
+    const direction =
+        getCurrentDirection();
+
+
+    /*
+     * Convert direction into individual
+     * movement components.
+     *
+     * This keeps the data useful on the
+     * receiving side even when a diagonal
+     * direction is selected.
+     */
+
+    let forward = 0;
+    let backward = 0;
+    let left = 0;
+    let right = 0;
+
+
+    if (
+        direction === "forward" ||
+        direction === "forward-left" ||
+        direction === "forward-right"
+    ) {
+
+        forward = 1;
+
+    }
+
+
+    if (
+        direction === "backward" ||
+        direction === "backward-left" ||
+        direction === "backward-right"
+    ) {
+
+        backward = 1;
+
+    }
+
+
+    if (
+        direction === "left" ||
+        direction === "forward-left" ||
+        direction === "backward-left"
+    ) {
+
+        left = 1;
+
+    }
+
+
+    if (
+        direction === "right" ||
+        direction === "forward-right" ||
+        direction === "backward-right"
+    ) {
+
+        right = 1;
+
+    }
+
+
+    return {
+
+        enabled:
+            keyboardController.checked,
+
+        direction:
+            direction,
+
+        throttle:
+            throttle,
+
+        steeringDualRate:
+            steeringDualRate,
+
+        forward:
+            forward,
+
+        backward:
+            backward,
+
+        left:
+            left,
+
+        right:
+            right
+
+    };
+
+}
+
+
+// ------------------------------------------------------------
+// Send controller data
+// ------------------------------------------------------------
+
+async function sendControllerData(
+    force = false
+) {
+
+    if (!keyboardController.checked) {
+
+        return;
+
+    }
+
+
+    const data =
+        getControllerPayload();
+
+
+    const serialized =
+        JSON.stringify(data);
+
+
+    /*
+     * Do not repeatedly send identical
+     * controller states.
+     */
+
+    if (
+        !force &&
+        serialized ===
+        lastControllerPayload
+    ) {
+
+        return;
+
+    }
+
+
+    lastControllerPayload =
+        serialized;
+
+
+    try {
+
+        await fetch(
+            "/controller",
+            {
+
+                method: "POST",
+
+                headers: {
+                    "Content-Type":
+                        "application/json"
+                },
+
+                body:
+                    serialized
+
+            }
+        );
+
+    } catch (error) {
+
+        console.error(
+            "Could not send controller data:",
+            error
+        );
+
+    }
+
+}
+
+
+// ------------------------------------------------------------
+// Throttle / steering repeating controls
+// ------------------------------------------------------------
+
+function startArrowControl() {
+
+    if (arrowControlInterval !== null) {
+
+        return;
+
+    }
+
+
+    /*
+     * Start with a relatively slow repeat.
+     * Holding the key then continues changing
+     * the analog value.
+     */
+
+    arrowControlInterval =
+        setInterval(() => {
+
+            if (
+                !keyboardController.checked
+            ) {
+
+                return;
+
+            }
+
+
+            let changed = false;
+
+
+            if (
+                pressedKeys.has("ArrowUp")
+            ) {
+
+                const old =
+                    throttle;
+
+                throttle =
+                    clamp(
+                        throttle + 1,
+                        0,
+                        100
+                    );
+
+                if (throttle !== old) {
+                    changed = true;
+                }
+
+            }
+
+
+            if (
+                pressedKeys.has("ArrowDown")
+            ) {
+
+                const old =
+                    throttle;
+
+                throttle =
+                    clamp(
+                        throttle - 1,
+                        0,
+                        100
+                    );
+
+                if (throttle !== old) {
+                    changed = true;
+                }
+
+            }
+
+
+            if (
+                pressedKeys.has("ArrowRight")
+            ) {
+
+                const old =
+                    steeringDualRate;
+
+                steeringDualRate =
+                    clamp(
+                        steeringDualRate + 1,
+                        0,
+                        100
+                    );
+
+                if (
+                    steeringDualRate !== old
+                ) {
+
+                    changed = true;
+
+                }
+
+            }
+
+
+            if (
+                pressedKeys.has("ArrowLeft")
+            ) {
+
+                const old =
+                    steeringDualRate;
+
+                steeringDualRate =
+                    clamp(
+                        steeringDualRate - 1,
+                        0,
+                        100
+                    );
+
+                if (
+                    steeringDualRate !== old
+                ) {
+
+                    changed = true;
+
+                }
+
+            }
+
+
+            if (changed) {
+
+                updateControllerDisplay();
+
+                sendControllerData();
+
+            }
+
+        }, 50);
+
+}
+
+
+// ------------------------------------------------------------
+// Stop arrow control
+// ------------------------------------------------------------
+
+function stopArrowControl() {
+
+    if (
+        arrowControlInterval !== null
+    ) {
+
+        clearInterval(
+            arrowControlInterval
+        );
+
+        arrowControlInterval =
+            null;
+
+    }
+
+}
+
+
+// ------------------------------------------------------------
+// Keyboard controller enable/disable
+// ------------------------------------------------------------
+
+keyboardController.addEventListener(
+    "change",
+    () => {
+
+        if (
+            keyboardController.checked
+        ) {
+
+            keyboardStatus.textContent =
+                "Controller enabled";
+
+            keyboardStatus.style.color =
+                "#fff";
+
+
+            Object.values(directionButtons)
+                .forEach(button => {
+
+                    button.disabled = false;
+
+                });
+
+
+            updateControllerDisplay();
+
+            sendControllerData(true);
+
+
+        } else {
+
+            keyboardStatus.textContent =
+                "Controller disabled";
+
+            keyboardStatus.style.color =
+                "#aaa";
+
+
+            pressedKeys.clear();
+
+            stopArrowControl();
+
+
+            Object.values(directionButtons)
+                .forEach(button => {
+
+                    button.disabled = true;
+
+                    button.classList.remove(
+                        "active"
+                    );
+
+                });
+
+
+            controllerDirection.textContent =
+                "STOP";
+
+
+            /*
+             * When disabled, send a final
+             * stop command so the receiver
+             * knows movement has ended.
+             */
+
+            sendDisabledControllerData();
+
+        }
+
+    }
+);
+
+
+// ------------------------------------------------------------
+// Send disabled / stop state
+// ------------------------------------------------------------
+
+async function sendDisabledControllerData() {
+
+    const data = {
+
+        enabled: false,
+
+        direction: "stop",
+
+        throttle: throttle,
+
+        steeringDualRate:
+            steeringDualRate,
+
+        forward: 0,
+        backward: 0,
+        left: 0,
+        right: 0
+
+    };
+
+
+    try {
+
+        await fetch(
+            "/controller",
+            {
+
+                method: "POST",
+
+                headers: {
+                    "Content-Type":
+                        "application/json"
+                },
+
+                body:
+                    JSON.stringify(data)
+
+            }
+        );
+
+    } catch (error) {
+
+        console.error(
+            "Could not send controller stop:",
+            error
+        );
+
+    }
+
+}
+
+
+// ------------------------------------------------------------
+// Keyboard key down
+// ------------------------------------------------------------
+
+window.addEventListener(
+    "keydown",
+    (event) => {
+
+        if (
+            !keyboardController.checked
+        ) {
+
+            return;
+
+        }
+
+
+        /*
+         * Prevent browser scrolling when
+         * arrow keys / movement keys are used.
+         */
+
+        if (
+            [
+                "ArrowUp",
+                "ArrowDown",
+                "ArrowLeft",
+                "ArrowRight",
+                "w",
+                "a",
+                "s",
+                "d",
+                "q",
+                "e",
+                "z",
+                "c"
+            ].includes(event.key)
+        ) {
+
+            event.preventDefault();
+
+        }
+
+
+        /*
+         * Ignore auto-repeat for the initial
+         * movement state. The arrow controller
+         * itself handles gradual repetition.
+         */
+
+        const wasAlreadyPressed =
+            pressedKeys.has(event.key);
+
+
+        pressedKeys.add(event.key);
+
+
+        /*
+         * Arrow keys immediately change the
+         * value by 1 on initial press.
+         */
+
+        if (!wasAlreadyPressed) {
+
+            if (event.key === "ArrowUp") {
+
+                changeThrottle(1);
+
+            }
+
+
+            if (event.key === "ArrowDown") {
+
+                changeThrottle(-1);
+
+            }
+
+
+            if (event.key === "ArrowLeft") {
+
+                changeSteering(-1);
+
+            }
+
+
+            if (event.key === "ArrowRight") {
+
+                changeSteering(1);
+
+            }
+
+        }
+
+
+        /*
+         * Movement keys immediately commit
+         * the current direction.
+         */
+
+        if (
+            [
+                "w",
+                "a",
+                "s",
+                "d",
+                "q",
+                "e",
+                "z",
+                "c"
+            ].includes(event.key)
+        ) {
+
+            updateControllerDisplay();
+
+            sendControllerData();
+
+        }
+
+
+        /*
+         * Start gradual arrow adjustment.
+         */
+
+        if (
+            [
+                "ArrowUp",
+                "ArrowDown",
+                "ArrowLeft",
+                "ArrowRight"
+            ].includes(event.key)
+        ) {
+
+            startArrowControl();
+
+        }
+
+    }
+);
+
+
+// ------------------------------------------------------------
+// Keyboard key up
+// ------------------------------------------------------------
+
+window.addEventListener(
+    "keyup",
+    (event) => {
+
+        if (
+            !keyboardController.checked
+        ) {
+
+            return;
+
+        }
+
+
+        pressedKeys.delete(
+            event.key
+        );
+
+
+        /*
+         * When movement keys are released,
+         * immediately send the new direction.
+         */
+
+        if (
+            [
+                "w",
+                "a",
+                "s",
+                "d",
+                "q",
+                "e",
+                "z",
+                "c"
+            ].includes(event.key)
+        ) {
+
+            updateControllerDisplay();
+
+            sendControllerData();
+
+        }
+
+
+        /*
+         * Stop the repeating arrow controller
+         * when no arrow keys remain held.
+         */
+
+        if (
+            !pressedKeys.has("ArrowUp") &&
+            !pressedKeys.has("ArrowDown") &&
+            !pressedKeys.has("ArrowLeft") &&
+            !pressedKeys.has("ArrowRight")
+        ) {
+
+            stopArrowControl();
+
+        }
+
+    }
+);
+
+
+// ------------------------------------------------------------
+// Safety: release all keys if browser loses focus
+// ------------------------------------------------------------
+
+window.addEventListener(
+    "blur",
+    () => {
+
+        if (
+            !keyboardController.checked
+        ) {
+
+            return;
+
+        }
+
+
+        pressedKeys.clear();
+
+        stopArrowControl();
+
+        updateControllerDisplay();
+
+        sendControllerData();
+
+    }
+);
+
+
+// ------------------------------------------------------------
+// Mouse/touch direction buttons
+// ------------------------------------------------------------
+
+Object.entries(directionButtons)
+    .forEach(([direction, button]) => {
+
+        button.addEventListener(
+            "mousedown",
+            event => {
+
+                if (
+                    !keyboardController.checked
+                ) {
+
+                    return;
+
+                }
+
+                event.preventDefault();
+
+                button.classList.add(
+                    "active"
+                );
+
+
+                /*
+                 * The visual buttons emulate
+                 * W/A/S/D-style direction commands.
+                 */
+
+                setDirectionFromButton(
+                    direction
+                );
+
+            }
+        );
+
+
+        button.addEventListener(
+            "mouseup",
+            () => {
+
+                if (
+                    !keyboardController.checked
+                ) {
+
+                    return;
+
+                }
+
+
+                releaseDirectionButton();
+
+            }
+        );
+
+
+        button.addEventListener(
+            "mouseleave",
+            () => {
+
+                if (
+                    !keyboardController.checked
+                ) {
+
+                    return;
+
+                }
+
+
+                releaseDirectionButton();
+
+            }
+        );
+
+
+        button.addEventListener(
+            "touchstart",
+            event => {
+
+                if (
+                    !keyboardController.checked
+                ) {
+
+                    return;
+
+                }
+
+                event.preventDefault();
+
+                button.classList.add(
+                    "active"
+                );
+
+                setDirectionFromButton(
+                    direction
+                );
+
+            },
+            { passive: false }
+        );
+
+
+        button.addEventListener(
+            "touchend",
+            event => {
+
+                event.preventDefault();
+
+                releaseDirectionButton();
+
+            },
+            { passive: false }
+        );
+
+    });
+
+
+// ------------------------------------------------------------
+// Direction button state
+// ------------------------------------------------------------
+
+let buttonDirectionKeys = [];
+
+
+function setDirectionFromButton(
+    direction
+) {
+
+    /*
+     * Clear previous simulated movement
+     * keys so the button behaves as a single
+     * directional command.
+     */
+
+    buttonDirectionKeys = [];
+
+
+    if (direction === "forward") {
+
+        buttonDirectionKeys =
+            ["w"];
+
+    }
+
+
+    if (direction === "backward") {
+
+        buttonDirectionKeys =
+            ["s"];
+
+    }
+
+
+    if (direction === "left") {
+
+        buttonDirectionKeys =
+            ["a"];
+
+    }
+
+
+    if (direction === "right") {
+
+        buttonDirectionKeys =
+            ["d"];
+
+    }
+
+
+    if (
+        direction ===
+        "forward-left"
+    ) {
+
+        buttonDirectionKeys =
+            ["w", "a"];
+
+    }
+
+
+    if (
+        direction ===
+        "forward-right"
+    ) {
+
+        buttonDirectionKeys =
+            ["w", "d"];
+
+    }
+
+
+    if (
+        direction ===
+        "backward-left"
+    ) {
+
+        buttonDirectionKeys =
+            ["s", "a"];
+
+    }
+
+
+    if (
+        direction ===
+        "backward-right"
+    ) {
+
+        buttonDirectionKeys =
+            ["s", "d"];
+
+    }
+
+
+    if (direction === "stop") {
+
+        buttonDirectionKeys = [];
+
+    }
+
+
+    buttonDirectionKeys
+        .forEach(key => {
+
+            pressedKeys.add(key);
+
+        });
+
+
+    updateControllerDisplay();
+
+    sendControllerData();
+
+}
+
+
+function releaseDirectionButton() {
+
+    buttonDirectionKeys
+        .forEach(key => {
+
+            pressedKeys.delete(key);
+
+        });
+
+
+    buttonDirectionKeys = [];
+
+
+    updateControllerDisplay();
+
+    sendControllerData();
+
+}
 
 
 // ------------------------------------------------------------
@@ -756,6 +2611,7 @@ async function start() {
 
 
         // Initial settings
+
         await sendSettings();
 
 
@@ -771,6 +2627,8 @@ async function start() {
 
 }
 
+
+updateControllerDisplay();
 
 start();
 
