@@ -494,7 +494,7 @@ let pc = null;
 // Wait for ICE gathering
 // ------------------------------------------------------------
 
-function waitForIceGatheringComplete(pc) {
+function waitForIceGatheringComplete(pc, timeoutMs = 8000) {
 
     return new Promise(resolve => {
 
@@ -503,9 +503,22 @@ function waitForIceGatheringComplete(pc) {
             return;
         }
 
+        const timeout = setTimeout(() => {
+
+            pc.removeEventListener(
+                "icegatheringstatechange",
+                checkState
+            );
+
+            resolve();
+
+        }, timeoutMs);
+
         function checkState() {
 
             if (pc.iceGatheringState === "complete") {
+
+                clearTimeout(timeout);
 
                 pc.removeEventListener(
                     "icegatheringstatechange",
@@ -640,7 +653,7 @@ async function start() {
 
         pc =
             new RTCPeerConnection({
-                iceServers: []
+                iceServers: {{ ice_servers | tojson }}
             });
 
 

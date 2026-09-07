@@ -18,6 +18,49 @@ def before_request():
 PORT = 1234
 
 # ------------------------------------------------------------
+# WebRTC ICE servers
+# ------------------------------------------------------------
+# STUN lets each browser discover its public IP/port so the video
+# path can work across the internet, not only on the same LAN.
+# ngrok only carries HTTP signaling; media is still peer-to-peer.
+#
+# TURN is optional. Add it if STUN is not enough (cellular, CGNAT,
+# strict NAT). Free credentials: https://www.metered.ca/tools/openrelay/
+
+STUN_SERVERS = [
+    {"urls": "stun:stun.l.google.com:19302"},
+    {"urls": "stun:stun1.l.google.com:19302"},
+    {"urls": "stun:stun.cloudflare.com:3478"},
+]
+
+TURN_URLS = []  # e.g. ["turn:global.relay.metered.ca:80", "turn:global.relay.metered.ca:80?transport=tcp"]
+TURN_USERNAME = ""
+TURN_CREDENTIAL = ""
+
+
+def ice_servers():
+    servers = list(STUN_SERVERS)
+
+    turn_urls = [
+        url.strip()
+        for url in os.environ.get("TURN_URL", "").split(",")
+        if url.strip()
+    ] or list(TURN_URLS)
+
+    turn_username = os.environ.get("TURN_USERNAME", TURN_USERNAME)
+    turn_credential = os.environ.get("TURN_CREDENTIAL", TURN_CREDENTIAL)
+
+    if turn_urls and turn_username and turn_credential:
+        servers.append({
+            "urls": turn_urls,
+            "username": turn_username,
+            "credential": turn_credential,
+        })
+
+    return servers
+
+
+# ------------------------------------------------------------
 # WebRTC signaling state
 # ------------------------------------------------------------
 
@@ -77,12 +120,12 @@ def battery():
 
 @app.route("/phone")
 def phone():
-    return render_template("phone.html")
+    return render_template("phone.html", ice_servers=ice_servers())
 
 
 @app.route("/computer")
 def computer():
-    return render_template("computer.html")
+    return render_template("computer.html", ice_servers=ice_servers())
 
 
 # ------------------------------------------------------------
@@ -208,6 +251,13 @@ if __name__ == "__main__":
     print("===================================")
     print()
     print(f"Port: {PORT}")
+    print()
+    print("WebRTC ICE:")
+    print("  STUN: enabled (required for viewing off your LAN)")
+    if any("username" in server for server in ice_servers()):
+        print("  TURN: enabled")
+    else:
+        print("  TURN: not configured (add TURN_* if STUN is not enough)")
     print()
     print("Computer:")
     print(f"  https://<YOUR-MAC-IP>:{PORT}/computer")
